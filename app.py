@@ -12,7 +12,12 @@ app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB
 
 
 def find_ghostscript():
-    candidates = ['gs', 'gswin64c', 'gswin32c']
+    candidates = [
+        'gs', 'gswin64c', 'gswin32c',
+        '/opt/homebrew/bin/gs',
+        '/usr/local/bin/gs',
+        '/usr/bin/gs',
+    ]
     for cmd in candidates:
         try:
             result = subprocess.run(
