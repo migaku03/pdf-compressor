@@ -7,26 +7,7 @@ echo  PDF圧縮ツール 起動中...
 echo ========================================
 echo.
 
-:: Ghostscript チェック
-where gswin64c > nul 2>&1
-if %errorlevel% neq 0 (
-  where gswin32c > nul 2>&1
-  if %errorlevel% neq 0 (
-    echo [エラー] Ghostscriptが見つかりません。
-    echo.
-    echo インストール方法:
-    echo   方法1: winget install Ghostscript.Ghostscript
-    echo   方法2: https://www.ghostscript.com/releases/gsdnld.html からダウンロード
-    echo.
-    echo インストール後、このファイルを再度実行してください。
-    pause
-    exit /b 1
-  )
-)
-
-echo [OK] Ghostscriptを確認しました。
-
-:: Python チェック
+:: ── Python check ─────────────────────────────────────────────────────────────
 where python > nul 2>&1
 if %errorlevel% neq 0 (
   echo [エラー] Pythonが見つかりません。
@@ -34,31 +15,44 @@ if %errorlevel% neq 0 (
   pause
   exit /b 1
 )
-
 echo [OK] Pythonを確認しました。
 
-:: Flask インストール
-python -c "import flask" > nul 2>&1
+:: ── NiceGUI check / install ──────────────────────────────────────────────────
+python -c "import nicegui" > nul 2>&1
 if %errorlevel% neq 0 (
-  echo [情報] Flaskをインストールしています...
-  pip install flask
+  echo [情報] NiceGUIをインストールしています...
+  pip install nicegui
   if %errorlevel% neq 0 (
-    echo [エラー] Flaskのインストールに失敗しました。
+    echo [エラー] NiceGUIのインストールに失敗しました。
     pause
     exit /b 1
   )
 )
+echo [OK] NiceGUIを確認しました。
 
-echo [OK] Flaskを確認しました。
+:: ── Ghostscript check (warning only) ─────────────────────────────────────────
+set GS_FOUND=0
+where gswin64c > nul 2>&1
+if %errorlevel% equ 0 set GS_FOUND=1
+where gswin32c > nul 2>&1
+if %errorlevel% equ 0 set GS_FOUND=1
+
+if "%GS_FOUND%"=="0" (
+  echo.
+  echo [警告] Ghostscriptが見つかりません。圧縮機能が使えません。
+  echo   インストール方法:
+  echo     winget install Ghostscript.Ghostscript
+  echo   または https://www.ghostscript.com/releases/gsdnld.html からダウンロード
+  echo.
+) else (
+  echo [OK] Ghostscriptを確認しました。
+)
+
 echo.
-echo ブラウザで http://localhost:5000 を開きます...
-echo 終了するにはこのウィンドウを閉じるか Ctrl+C を押してください。
+echo ブラウザが自動で開きます。終了するにはこのウィンドウを閉じてください。
 echo.
 
-:: ブラウザを2秒後に開く（バックグラウンド）
-start "" /b cmd /c "timeout /t 2 > nul && start http://localhost:5000"
-
-:: アプリ起動
+:: ── Launch ────────────────────────────────────────────────────────────────────
 python app.py
 
 pause

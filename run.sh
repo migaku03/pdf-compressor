@@ -6,21 +6,7 @@ echo " PDF圧縮ツール 起動中..."
 echo "========================================"
 echo ""
 
-# Ghostscript チェック
-if ! command -v gs &>/dev/null; then
-  echo "[エラー] Ghostscriptが見つかりません。"
-  echo ""
-  echo "インストール方法:"
-  echo "  Mac:   brew install ghostscript"
-  echo "  Ubuntu/Debian: sudo apt install ghostscript"
-  echo "  Fedora/RHEL:   sudo dnf install ghostscript"
-  echo ""
-  echo "インストール後、このスクリプトを再度実行してください。"
-  exit 1
-fi
-echo "[OK] Ghostscriptを確認しました。"
-
-# Python チェック
+# ── Python check ─────────────────────────────────────────────────────────────
 PYTHON=""
 for cmd in python3 python; do
   if command -v "$cmd" &>/dev/null; then
@@ -39,31 +25,40 @@ if [ -z "$PYTHON" ]; then
   echo "  https://www.python.org/ からインストールしてください。"
   exit 1
 fi
-echo "[OK] Pythonを確認しました: $PYTHON"
+echo "[OK] Python: $PYTHON"
 
-# Flask インストール
-if ! "$PYTHON" -c "import flask" &>/dev/null; then
-  echo "[情報] Flaskをインストールしています..."
-  "$PYTHON" -m pip install flask
+# ── NiceGUI check / install ──────────────────────────────────────────────────
+if ! "$PYTHON" -c "import nicegui" &>/dev/null; then
+  echo "[情報] NiceGUIをインストールしています..."
+  "$PYTHON" -m pip install nicegui
 fi
-echo "[OK] Flaskを確認しました。"
+echo "[OK] NiceGUI を確認しました。"
 
-echo ""
-echo "ブラウザで http://localhost:5000 を開きます..."
-echo "終了するには Ctrl+C を押してください。"
-echo ""
-
-# ブラウザを2秒後に開く（バックグラウンド）
-(
-  sleep 2
-  if command -v xdg-open &>/dev/null; then
-    xdg-open "http://localhost:5000" &>/dev/null
-  elif command -v open &>/dev/null; then
-    open "http://localhost:5000"
+# ── Ghostscript check (warning only) ────────────────────────────────────────
+GS_FOUND=0
+for gs_path in gs /opt/homebrew/bin/gs /usr/local/bin/gs /usr/bin/gs; do
+  if command -v "$gs_path" &>/dev/null; then
+    GS_FOUND=1
+    break
   fi
-) &
+done
 
-# アプリ起動
+if [ "$GS_FOUND" -eq 0 ]; then
+  echo ""
+  echo "[警告] Ghostscript が見つかりません。圧縮機能が使えません。"
+  echo "  Mac:            brew install ghostscript"
+  echo "  Ubuntu/Debian:  sudo apt install ghostscript"
+  echo "  Fedora/RHEL:    sudo dnf install ghostscript"
+  echo ""
+else
+  echo "[OK] Ghostscript を確認しました。"
+fi
+
+echo ""
+echo "ブラウザが自動で開きます。終了するには Ctrl+C を押してください。"
+echo ""
+
+# ── Launch ───────────────────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 "$PYTHON" app.py
